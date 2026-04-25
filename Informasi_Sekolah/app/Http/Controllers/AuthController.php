@@ -2,35 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
+    public function showLogin()
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|unique:users', 
-            'password' => 'required|string|min:8',
-        ]);
-
-                if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $user = User::create([  // memasukan imputan ke tabel user
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password), 
-        ]);
-
-                $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json(['data' => $user, 'access_token' => $token, 'token_type' => 'Bearer'], 201); 
+        return view('login');
     }
 
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required',
+            'password' => 'required'
+        ]);
+
+        if ($request->email == "admin@gmail.com" && $request->password == "123") {
+            return redirect('/dashboard');
+        }
+
+        return back()->with('error', 'Email atau password salah');
+    }
 }
