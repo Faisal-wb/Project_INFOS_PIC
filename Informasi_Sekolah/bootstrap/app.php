@@ -12,9 +12,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'cek_admin' => \App\Http\Middleware\CekAdmin::class,
+        ]);
+        
         $middleware->validateCsrfTokens(except: [
             '/api/*',
             '/libur/komentar',
+            '/admin/libur',
+            '/admin/libur/*',
+            '/login',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

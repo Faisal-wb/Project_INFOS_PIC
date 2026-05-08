@@ -19,6 +19,7 @@ class AuthController extends Controller
         ]);
 
         if ($request->email == "admin@gmail.com" && $request->password == "123") {
+            session(['is_admin' => true]);
             return redirect('/dashboard');
         }
 
