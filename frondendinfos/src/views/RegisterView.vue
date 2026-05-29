@@ -1,9 +1,24 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 const router = useRouter()
+
+onMounted(async () => {
+  try {
+    const res = await axios.get('/user');
+    if (res.data && res.data.name) {
+      if (res.data.email === 'admin@gmail.com') {
+        router.push('/admin');
+      } else {
+        router.push('/beranda');
+      }
+    }
+  } catch (error) {
+    // User not authenticated, proceed to register
+  }
+});
 
 const formData = ref({
   name: '',
