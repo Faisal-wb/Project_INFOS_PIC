@@ -8,7 +8,7 @@ Sistem Informasi dan Administrasi Terpadu untuk SMK Tunas Harapan Pati. Proyek i
 - **Pengecekan Administrasi Siswa:** Pengecekan status pembayaran tagihan siswa berdasarkan Asesmen. Admin dapat mengunggah tagihan secara massal menggunakan file Excel.
 - **Komentar Real-Time:** Interaksi tanya jawab pada setiap pengumuman secara langsung tanpa *refresh* halaman (Powered by Firebase).
 - **Manajemen Autentikasi:** Sistem Login, Register, dan Manajemen Profil pengguna.
-- **UI/UX Modern:** Desain antarmuka kustom yang responsif dan modern menggunakan Vanilla CSS.
+- **UI/UX Modern:** Desain antarmuka kustom bergaya kalender, dilengkapi dengan sistem Paginasi (Pagination) di halaman beranda menggunakan Vanilla CSS.
 
 ## 🛠️ Teknologi yang Digunakan
 
@@ -35,7 +35,25 @@ Proyek ini dibagi menjadi dua repositori/folder utama:
 
 ## ⚙️ Panduan Instalasi & Menjalankan Aplikasi
 
-### 1. Persiapan Backend (Laravel)
+Ada dua cara untuk menjalankan aplikasi ini: menggunakan **Docker** (Direkomendasikan) atau menjalankannya secara manual.
+
+### Opsi 1: Menggunakan Docker (Sangat Direkomendasikan) 🐳
+Aplikasi ini sudah diatur secara lengkap agar bisa berjalan otomatis menggunakan Docker.
+```bash
+# Buka terminal di folder root (Project_INFOS_PIC)
+docker-compose up -d --build
+```
+- **Frontend** akan berjalan di: `http://localhost:5173`
+- **Backend (API)** akan berjalan di: `http://localhost:8080`
+- **Database** akan otomatis berjalan di latar belakang (port 3306).
+
+*(Catatan: Saat pertama kali dijalankan, kamu mungkin perlu membuat tabel database dengan masuk ke dalam container backend: `docker-compose exec backend php artisan migrate`)*
+
+---
+
+### Opsi 2: Instalasi Manual Tanpa Docker
+
+#### 1. Persiapan Backend (Laravel)
 ```bash
 cd Informasi_Sekolah
 composer install
@@ -44,11 +62,11 @@ php artisan key:generate
 # Sesuaikan konfigurasi database di file .env
 php artisan migrate
 php artisan storage:link
-php artisan serve
+php artisan serve --port=8080
 ```
-*Backend akan berjalan di `http://localhost:8000`*
+*Backend akan berjalan di `http://localhost:8080`*
 
-### 2. Persiapan Frontend (Vue.js)
+#### 2. Persiapan Frontend (Vue.js)
 ```bash
 cd frondendinfos
 npm install
