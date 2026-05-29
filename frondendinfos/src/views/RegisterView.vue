@@ -1,11 +1,16 @@
 <script setup>
 import { ref } from 'vue'
-import api from '../API/api.js'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
 
-const name = ref('')
-const email = ref('')
-const password = ref('')
-const confirmPassword = ref('')
+const router = useRouter()
+
+const formData = ref({
+  name: '',
+  email: '',
+  password: '',
+  password_confirmation: ''
+})
 
 const isLoading = ref(false)
 const message = ref('')
@@ -15,13 +20,13 @@ async function onSubmit() {
   message.value = ''
   messageType.value = ''
 
-  if (password.value !== confirmPassword.value) {
+  if (formData.value.password !== formData.value.password_confirmation) {
     message.value = 'Password dan konfirmasi password harus sama.'
     messageType.value = 'error'
     return
   }
 
-  if (password.value.length < 6) {
+  if (formData.value.password.length < 6) {
     message.value = 'Password minimal 6 karakter.'
     messageType.value = 'error'
     return
@@ -30,37 +35,32 @@ async function onSubmit() {
   isLoading.value = true
 
   try {
-    const response = await api.post('register', {
-      name: name.value,
-      email: email.value,
-      password: password.value,
-      password_confirmation: confirmPassword.value
+    await axios.get('/sanctum/csrf-cookie')
+    const response = await axios.post('/register', formData.value, {
+      headers: {
+        'Accept': 'application/json'
+      }
     })
 
-    message.value = 'Register berhasil! Selamat datang.'
-    messageType.value = 'success'
-
-    if (response.data.token) {
-      localStorage.setItem('auth_token', response.data.token)
+    if (response.data.status === 'success') {
+      message.value = 'Register berhasil! Silakan login.'
+      messageType.value = 'success'
+      
+      setTimeout(() => {
+        router.push('/login')
+      }, 1500)
     }
-
-    name.value = ''
-    email.value = ''
-    password.value = ''
-    confirmPassword.value = ''
   } catch (err) {
-    if (err.response && err.response.status === 422) {
-      const errors = err.response.data.errors
-      if (errors) {
-        const firstKey = Object.keys(errors)[0]
-        message.value = errors[firstKey][0]
+    if (err.response && err.response.data && err.response.data.message) {
+      if (err.response.data.errors) {
+        // Ambil error pertama
+        const firstError = Object.values(err.response.data.errors)[0][0]
+        message.value = firstError
       } else {
-        message.value = err.response.data.message || 'Data tidak valid.'
+        message.value = err.response.data.message
       }
-    } else if (err.response) {
-      message.value = err.response.data.message || 'Terjadi kesalahan.'
     } else {
-      message.value = 'Tidak dapat terhubung ke server.'
+      message.value = 'Terjadi kesalahan saat mencoba mendaftar.'
     }
     messageType.value = 'error'
   } finally {
@@ -83,22 +83,22 @@ async function onSubmit() {
         <form @submit.prevent="onSubmit">
           <div class="form-group">
             <label>Nama Lengkap</label>
-            <input type="text" v-model="name" placeholder="Masukkan nama" required />
+            <input type="text" v-model="formData.name" placeholder="Masukkan nama" required />
           </div>
 
           <div class="form-group">
             <label>Email</label>
-            <input type="email" v-model="email" placeholder="contoh@email.com" required />
+            <input type="email" v-model="formData.email" placeholder="contoh@email.com" required />
           </div>
 
           <div class="form-group">
             <label>Password</label>
-            <input type="password" v-model="password" placeholder="Minimal 6 karakter" required />
+            <input type="password" v-model="formData.password" placeholder="Minimal 6 karakter" required />
           </div>
 
           <div class="form-group">
             <label>Konfirmasi Password</label>
-            <input type="password" v-model="confirmPassword" placeholder="Ulangi password" required />
+            <input type="password" v-model="formData.password_confirmation" placeholder="Ulangi password" required />
           </div>
 
           <div v-if="message" :class="['alert', messageType === 'error' ? 'alert-error' : 'alert-success']">
@@ -108,6 +108,10 @@ async function onSubmit() {
           <button type="submit" class="submit-btn" :disabled="isLoading">
             {{ isLoading ? 'Memproses...' : 'Daftar Sekarang' }}
           </button>
+          
+          <div class="auth-footer" style="margin-top: 20px; text-align: center; font-size: 14px; color: #666;">
+            <p>Sudah punya akun? <router-link to="/login" style="color: #0056b3; font-weight: 600; text-decoration: none;">Masuk sekarang</router-link></p>
+          </div>
         </form>
       </div>
     </main>
