@@ -32,6 +32,7 @@ services:
       - db
     volumes:
       - ./Informasi_Sekolah:/app
+      - /app/vendor
 
   frontend:
     build:
