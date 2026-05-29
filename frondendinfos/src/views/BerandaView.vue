@@ -57,7 +57,7 @@ async function fetchBeranda() {
       
       const formatItem = (item) => {
         const dateObj = new Date(item.tanggal);
-        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const dateOptionsFull = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         
         return {
           id: item.id,
@@ -65,7 +65,10 @@ async function fetchBeranda() {
           description: item.deskripsi,
           gambar: item.gambar,
           file_lampiran: item.file_lampiran,
-          dateLabel: dateObj.toLocaleDateString('id-ID', dateOptions)
+          dateLabel: dateObj.toLocaleDateString('id-ID', dateOptionsFull),
+          calMonth: dateObj.toLocaleDateString('id-ID', { month: 'short' }),
+          calDate: dateObj.toLocaleDateString('id-ID', { day: '2-digit' }),
+          calYear: dateObj.toLocaleDateString('id-ID', { year: 'numeric' })
         };
       };
 
@@ -235,10 +238,21 @@ async function addComment() {
           </div>
           
           <div class="info-list">
-            <div v-for="item in paginatedInfos" :key="item.id" class="info-item-wrapper">
-              <div class="date-label">{{ item.dateLabel }}</div>
-              <div class="info-card clickable" @click="openDetail(item)">
+            <div v-for="item in paginatedInfos" :key="item.id" class="info-item-wrapper" style="display: flex; gap: 20px; align-items: stretch;">
+              
+              <!-- Calendar Date Box -->
+              <div class="calendar-box">
+                <div class="calendar-month">{{ item.calMonth }}</div>
+                <div class="calendar-date">{{ item.calDate }}</div>
+                <div class="calendar-year">{{ item.calYear }}</div>
+              </div>
+
+              <!-- Content Card -->
+              <div class="info-card clickable" @click="openDetail(item)" style="flex: 1; flex-direction: column; align-items: flex-start; justify-content: center;">
                 <span class="info-title">{{ item.title }}</span>
+                <p style="color: #666; margin-top: 8px; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 0;">
+                  {{ item.description }}
+                </p>
               </div>
             </div>
             
@@ -444,8 +458,45 @@ async function addComment() {
 
 .info-item-wrapper {
   display: flex;
+  flex-direction: row;
+  gap: 20px;
+}
+
+.calendar-box {
+  background-color: var(--bg-white);
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  min-width: 90px;
+  text-align: center;
+  overflow: hidden;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.04);
+  flex-shrink: 0;
+  display: flex;
   flex-direction: column;
-  gap: 8px;
+}
+
+.calendar-month {
+  background-color: var(--primary-blue);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 8px 0;
+  letter-spacing: 1px;
+}
+
+.calendar-date {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-dark);
+  padding: 10px 0 2px;
+}
+
+.calendar-year {
+  font-size: 13px;
+  color: #666;
+  padding-bottom: 12px;
+  font-weight: 500;
 }
 
 .date-label {
