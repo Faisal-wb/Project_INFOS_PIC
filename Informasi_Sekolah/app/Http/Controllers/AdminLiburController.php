@@ -31,14 +31,21 @@ class AdminLiburController extends Controller
         $request->validate([
             'judul' => 'required|string|max:255',
             'tanggal' => 'required|date',
-            'keterangan' => 'required|string'
+            'keterangan' => 'required|string',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
         ]);
 
-        $libur = HariLibur::create([
+        $data = [
             'judul' => $request->judul,
             'tanggal' => $request->tanggal,
             'deskripsi' => $request->keterangan
-        ]);
+        ];
+
+        if ($request->hasFile('gambar')) {
+            $data['gambar'] = $request->file('gambar')->store('info_gambar', 'public');
+        }
+
+        $libur = HariLibur::create($data);
 
         if ($request->expectsJson()) {
             return response()->json(['status' => 'success', 'message' => 'Info libur berhasil ditambahkan!', 'data' => $libur], 201);
@@ -60,15 +67,26 @@ class AdminLiburController extends Controller
         $request->validate([
             'judul' => 'required|string|max:255',
             'tanggal' => 'required|date',
-            'keterangan' => 'required|string'
+            'keterangan' => 'required|string',
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
         ]);
 
         $libur = HariLibur::findOrFail($id);
-        $libur->update([
+        
+        $data = [
             'judul' => $request->judul,
             'tanggal' => $request->tanggal,
             'deskripsi' => $request->keterangan
-        ]);
+        ];
+
+        if ($request->hasFile('gambar')) {
+            if ($libur->gambar && \Storage::disk('public')->exists($libur->gambar)) {
+                \Storage::disk('public')->delete($libur->gambar);
+            }
+            $data['gambar'] = $request->file('gambar')->store('info_gambar', 'public');
+        }
+
+        $libur->update($data);
 
         if ($request->expectsJson()) {
             return response()->json(['status' => 'success', 'message' => 'Info libur berhasil diperbarui!', 'data' => $libur]);

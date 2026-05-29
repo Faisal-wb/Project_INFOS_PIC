@@ -15,6 +15,7 @@ const currentUser = ref(null);
 const newComment = ref('');
 
 const formData = ref({ id: null, kategori: 'libur', judul: '', tanggal: '', keterangan: '' });
+const selectedFile = ref(null);
 
 async function fetchAdminData() {
   try {
@@ -53,6 +54,7 @@ onMounted(() => {
 
 function goToAdd() {
   formData.value = { id: null, kategori: 'libur', judul: '', tanggal: '', keterangan: '' };
+  selectedFile.value = null;
   viewMode.value = 'add';
 }
 
@@ -64,8 +66,13 @@ function goToEdit(item) {
     tanggal: item.tanggal ? item.tanggal.substring(0, 10) : '',
     keterangan: item.deskripsi
   };
+  selectedFile.value = null;
   viewMode.value = 'edit';
   fetchComments(item.id, item.kategori);
+}
+
+function handleFileChange(event) {
+  selectedFile.value = event.target.files[0];
 }
 
 async function fetchComments(infoId, kategori) {
@@ -90,17 +97,22 @@ function goToList() {
 async function savePost() {
   try {
     const url = `/admin/${formData.value.kategori}`;
-    const payload = {
-      judul: formData.value.judul,
-      tanggal: formData.value.tanggal,
-      keterangan: formData.value.keterangan,
-      deskripsi: formData.value.keterangan
-    };
+    const payload = new FormData();
+    
+    payload.append('judul', formData.value.judul);
+    payload.append('tanggal', formData.value.tanggal);
+    payload.append('keterangan', formData.value.keterangan);
+    payload.append('deskripsi', formData.value.keterangan);
+    
+    if (selectedFile.value) {
+      payload.append('gambar', selectedFile.value);
+    }
 
     if (viewMode.value === 'add') {
-      await axios.post(url, payload);
+      await axios.post(url, payload, { headers: { 'Content-Type': 'multipart/form-data' }});
     } else {
-      await axios.put(`${url}/${formData.value.id}`, payload);
+      payload.append('_method', 'PUT');
+      await axios.post(`${url}/${formData.value.id}`, payload, { headers: { 'Content-Type': 'multipart/form-data' }});
     }
     
     await fetchAdminData();
@@ -245,6 +257,11 @@ function handleBeranda() {
           <div class="form-group">
             <label>Tanggal</label>
             <input type="date" v-model="formData.tanggal" class="form-input" />
+          </div>
+          
+          <div class="form-group">
+            <label>Gambar Info (Opsional)</label>
+            <input type="file" @change="handleFileChange" accept="image/*" class="form-input" style="padding: 9px 12px;" />
           </div>
           
           <div class="form-group">

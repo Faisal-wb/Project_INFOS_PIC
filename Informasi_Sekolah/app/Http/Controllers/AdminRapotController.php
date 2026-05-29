@@ -42,11 +42,18 @@ class AdminRapotController extends Controller
             'waktu_selesai'  => 'nullable|date_format:H:i',
             'kelas'          => 'nullable|string|max:50',
             'lokasi'         => 'nullable|string|max:255',
+            'gambar'         => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
         ]);
 
-        $jadwal = JadwalRapot::create($request->only([
+        $data = $request->only([
             'judul', 'deskripsi', 'tanggal', 'waktu_mulai', 'waktu_selesai', 'kelas', 'lokasi'
-        ]));
+        ]);
+
+        if ($request->hasFile('gambar')) {
+            $data['gambar'] = $request->file('gambar')->store('info_gambar', 'public');
+        }
+
+        $jadwal = JadwalRapot::create($data);
 
         if ($request->expectsJson()) {
             return response()->json(['status' => 'success', 'message' => 'Jadwal rapot berhasil ditambahkan!', 'data' => $jadwal], 201);
@@ -77,12 +84,23 @@ class AdminRapotController extends Controller
             'waktu_selesai'  => 'nullable|date_format:H:i',
             'kelas'          => 'nullable|string|max:50',
             'lokasi'         => 'nullable|string|max:255',
+            'gambar'         => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
         ]);
 
         $jadwal = JadwalRapot::findOrFail($id);
-        $jadwal->update($request->only([
+        
+        $data = $request->only([
             'judul', 'deskripsi', 'tanggal', 'waktu_mulai', 'waktu_selesai', 'kelas', 'lokasi'
-        ]));
+        ]);
+
+        if ($request->hasFile('gambar')) {
+            if ($jadwal->gambar && \Storage::disk('public')->exists($jadwal->gambar)) {
+                \Storage::disk('public')->delete($jadwal->gambar);
+            }
+            $data['gambar'] = $request->file('gambar')->store('info_gambar', 'public');
+        }
+
+        $jadwal->update($data);
 
         if ($request->expectsJson()) {
             return response()->json(['status' => 'success', 'message' => 'Jadwal rapot berhasil diperbarui!', 'data' => $jadwal]);

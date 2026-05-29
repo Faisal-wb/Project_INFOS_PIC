@@ -5,5 +5,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class HariLibur extends Model
 {
-    protected $fillable = ['tanggal', 'judul', 'deskripsi'];
+    protected $fillable = ['tanggal', 'judul', 'deskripsi', 'gambar'];
 }

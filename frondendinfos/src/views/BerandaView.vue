@@ -52,6 +52,7 @@ async function fetchBeranda() {
           id: item.id,
           title: item.judul,
           description: item.deskripsi,
+          gambar: item.gambar,
           dateLabel: dateObj.toLocaleDateString('id-ID', dateOptions)
         };
       };
@@ -115,6 +116,11 @@ function goBack() {
 
 function goHome() {
   router.push('/');
+}
+
+function getImageUrl(path) {
+  if (!path) return '';
+  return `http://localhost:8080/storage/${path}`;
 }
 
 async function addComment() {
@@ -209,6 +215,9 @@ async function addComment() {
           <div class="detail-content">
             <div class="detail-date">{{ selectedInfo.dateLabel }}</div>
             <h2 class="detail-title">{{ selectedInfo.title }}</h2>
+            <div v-if="selectedInfo.gambar" class="detail-image" style="margin: 15px 0; text-align: center;">
+              <img :src="getImageUrl(selectedInfo.gambar)" alt="Gambar Informasi" style="max-width: 100%; max-height: 500px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
+            </div>
             <div class="detail-desc">
               <p>{{ selectedInfo.description }}</p>
             </div>
