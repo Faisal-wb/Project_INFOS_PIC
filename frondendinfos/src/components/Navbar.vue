@@ -23,12 +23,9 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
   <header class="navbar" :class="{ scrolled: isScrolled }">
     <div class="navbar-container container">
       <router-link to="/" class="navbar-brand" @click="closeMobileMenu">
-        <div class="brand-icon">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-            <rect width="32" height="32" rx="8" fill="url(#logoGrad)"/>
-            <path d="M8 10h16v2H8zm0 5h12v2H8zm0 5h14v2H8z" fill="white" opacity="0.9"/>
-            <defs><linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#e8862a"/><stop offset="1" stop-color="#c46d18"/></linearGradient></defs>
-          </svg>
+        <div class="brand-icon" style="display: flex; gap: 10px; align-items: center;">
+          <img src="../assets/logo.png" alt="Logo SMK" style="height: 35px; width: auto;" />
+          <img src="../assets/Vokasi-Indonesia.png" alt="Logo Vokasi" style="height: 35px; width: auto;" />
         </div>
         <div class="brand-text">
           <span class="brand-name">SMK Tunas Harapan Pati</span>

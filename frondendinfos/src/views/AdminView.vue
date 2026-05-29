@@ -184,7 +184,9 @@ function handleBeranda() {
     <!-- Admin Navbar -->
     <nav class="navbar">
       <div class="navbar-container">
-        <div class="brand">
+        <div class="brand" style="display: flex; align-items: center; gap: 15px;">
+          <img src="../assets/logo.png" alt="Logo SMK" style="height: 40px; width: auto;" />
+          <img src="../assets/Vokasi-Indonesia.png" alt="Logo Vokasi" style="height: 40px; width: auto;" />
           <span class="brand-text">SMK Tunas Harapan Pati</span>
         </div>
         <div class="nav-action">
