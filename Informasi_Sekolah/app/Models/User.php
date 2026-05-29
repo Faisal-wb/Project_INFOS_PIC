@@ -25,6 +25,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'no_telp',
+        'about_me',
+        'foto_profile',
     ];
 
         /**
@@ -48,5 +51,17 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Mendapatkan URL foto profil.
+     * Jika tidak ada foto, return null.
+     */
+    public function getFotoProfileUrlAttribute(): ?string
+    {
+        if ($this->foto_profile) {
+            return asset('storage/' . $this->foto_profile);
+        }
+        return null;
     }
 }
