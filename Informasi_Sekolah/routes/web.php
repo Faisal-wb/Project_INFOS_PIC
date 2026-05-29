@@ -42,7 +42,14 @@ Route::prefix('profile')->name('profile.')->middleware('cek_login')->group(funct
 
 // --- FITUR LIBUR & KOMENTAR (Punya Faisall) ---
 Route::get('/libur', [LiburController::class, 'index']);
-Route::post('/libur/komentar', [LiburController::class, 'simpanKomentar']);
+Route::get('/komentar', [LiburController::class, 'getKomentar']);
+Route::post('/komentar', [LiburController::class, 'simpanKomentar']);
+Route::delete('/komentar/{id}', [LiburController::class, 'hapusKomentar']);
+
+// Get current user for frontend
+Route::get('/user', function (\Illuminate\Http\Request $request) {
+    return response()->json($request->user());
+});
 
 // --- FITUR ADMIN (Butuh Login Admin) ---
 Route::middleware('cek_admin')->group(function () {

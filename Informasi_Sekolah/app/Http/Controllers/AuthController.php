@@ -28,11 +28,25 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             // Set session is_admin jika email admin (backward compatible)
+            $isAdmin = false;
             if (Auth::user()->email === 'admin@gmail.com') {
                 session(['is_admin' => true]);
+                $isAdmin = true;
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => 'success',
+                    'user' => Auth::user(),
+                    'is_admin' => $isAdmin
+                ]);
             }
 
             return redirect()->intended('/profile');
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['status' => 'error', 'message' => 'Email atau password salah'], 401);
         }
 
         return back()->with('error', 'Email atau password salah');
@@ -63,6 +77,13 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'user' => $user
+            ]);
+        }
+
         return redirect()->route('profile.show')->with('success', 'Registrasi berhasil!');
     }
 
@@ -72,6 +93,10 @@ class AuthController extends Controller
         session()->forget('is_admin');
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        if ($request->expectsJson()) {
+            return response()->json(['status' => 'success']);
+        }
 
         return redirect('/login');
     }

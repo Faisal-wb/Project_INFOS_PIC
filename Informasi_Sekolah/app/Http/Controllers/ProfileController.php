@@ -11,9 +11,16 @@ class ProfileController extends Controller
     /**
      * Menampilkan halaman profil user yang sedang login.
      */
-    public function show()
+    public function show(Request $request)
     {
         $user = Auth::user();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'data' => $user
+            ]);
+        }
 
         return view('profile.show', compact('user'));
     }
@@ -46,6 +53,14 @@ class ProfileController extends Controller
         $user->about_me = $request->about_me;
         $user->save();
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Profil berhasil diperbarui!',
+                'data' => $user
+            ]);
+        }
+
         return redirect()->route('profile.show')->with('success', 'Profil berhasil diperbarui!');
     }
 
@@ -70,6 +85,14 @@ class ProfileController extends Controller
         $user->foto_profile = $path;
         $user->save();
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Foto profil berhasil diperbarui!',
+                'data' => $user
+            ]);
+        }
+
         return redirect()->route('profile.show')->with('success', 'Foto profil berhasil diperbarui!');
     }
 
@@ -86,6 +109,14 @@ class ProfileController extends Controller
 
         $user->foto_profile = null;
         $user->save();
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Foto profil berhasil dihapus!',
+                'data' => $user
+            ]);
+        }
 
         return redirect()->route('profile.show')->with('success', 'Foto profil berhasil dihapus!');
     }
