@@ -66,6 +66,7 @@ class AuthController extends Controller
             'no_telp'  => 'nullable|string|max:20',
         ]);
 
+        // Simpan nomor telepon sebagai profil opsional, tapi response register hanya mengembalikan auth data yang dibutuhkan.
         $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
@@ -73,13 +74,14 @@ class AuthController extends Controller
             'no_telp'  => $request->no_telp,
         ]);
 
-        // Langsung login setelah register
-        Auth::login($user);
-        $request->session()->regenerate();
+        $token = $user->createToken('api-token')->plainTextToken;
 
         if ($request->expectsJson()) {
             return response()->json([
+                'message' => 'Register berhasil',
                 'status' => 'success',
+                'token' => $token,
+                'token_type' => 'Bearer',
                 'user' => $user
             ]);
         }

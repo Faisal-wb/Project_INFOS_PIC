@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +14,7 @@ class ProfileController extends Controller
      */
     public function show(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
 
         if ($request->expectsJson()) {
@@ -30,6 +32,7 @@ class ProfileController extends Controller
      */
     public function edit()
     {
+        /** @var User $user */
         $user = Auth::user();
 
         return view('profile.edit', compact('user'));
@@ -40,6 +43,7 @@ class ProfileController extends Controller
      */
     public function update(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
 
         $request->validate([
@@ -69,6 +73,7 @@ class ProfileController extends Controller
      */
     public function updateFoto(Request $request)
     {
+        /** @var User $user */
         $user = Auth::user();
 
         $request->validate([
@@ -101,6 +106,7 @@ class ProfileController extends Controller
      */
     public function deleteFoto()
     {
+        /** @var User $user */
         $user = Auth::user();
 
         if ($user->foto_profile && Storage::disk('public')->exists($user->foto_profile)) {
