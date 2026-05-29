@@ -761,7 +761,71 @@ async function addComment() {
   }
   
   .main-content {
-    padding: 30px 20px;
+    padding: 30px 15px;
+  }
+
+  .navbar-container {
+    padding: 0 15px;
+  }
+
+  .brand-text {
+    display: none;
+  }
+
+  .brand img {
+    height: 30px !important;
+  }
+
+  .nav-action {
+    gap: 15px !important;
+  }
+
+  .profile-label {
+    font-size: 14px;
+  }
+
+  .info-item-wrapper {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .calendar-box {
+    flex-direction: row !important;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+  }
+
+  .calendar-month {
+    padding: 10px 15px;
+    height: 100%;
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .calendar-date {
+    padding: 10px 15px;
+    font-size: 22px;
+    margin: 0;
+  }
+
+  .calendar-year {
+    padding: 10px 15px;
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .info-card {
+    width: 100%;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .detail-title {
+    font-size: 22px;
   }
 }
 </style>

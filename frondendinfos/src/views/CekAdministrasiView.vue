@@ -301,6 +301,18 @@ async function checkAdministrasi() {
 }
 
 @media (max-width: 600px) {
+  .main-content {
+    padding: 20px 15px 40px;
+  }
+  
+  .page-title {
+    font-size: 26px;
+  }
+  
+  .form-card {
+    padding: 20px;
+  }
+
   .input-row {
     flex-direction: column;
   }
@@ -308,6 +320,16 @@ async function checkAdministrasi() {
   .btn-blue {
     padding: 14px;
     width: 100%;
+  }
+
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .value {
+    text-align: left;
   }
 }
 </style>

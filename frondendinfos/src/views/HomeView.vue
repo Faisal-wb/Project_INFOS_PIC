@@ -210,9 +210,38 @@ function handleEntry() {
 }
 
 @media (max-width: 768px) {
+  .brand-text {
+    display: none;
+  }
+  .brand img {
+    height: 30px !important;
+  }
+  .navbar-container {
+    padding: 0 15px;
+  }
+  .hero-content {
+    padding: 0 20px;
+  }
+  .hero-title {
+    font-size: 28px;
+    margin-bottom: 15px;
+  }
+  .hero-subtitle {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
   .bottom-actions {
-    bottom: 20px;
-    right: 20px;
+    position: relative;
+    bottom: auto;
+    right: auto;
+    justify-content: flex-start;
+    padding: 0 20px;
+    margin-top: 20px;
+  }
+  .hero {
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
   }
 }
 
