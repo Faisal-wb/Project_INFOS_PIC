@@ -82,4 +82,14 @@ Route::middleware('cek_admin')->group(function () {
         Route::put('/{id}', [AdminRapotController::class, 'update'])->name('update');
         Route::delete('/{id}', [AdminRapotController::class, 'destroy'])->name('destroy');
     });
+
+    // Admin Administrasi
+    Route::prefix('admin/administrasi')->name('admin.administrasi.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\AdministrasiController::class, 'index'])->name('index');
+        Route::post('/import', [\App\Http\Controllers\AdministrasiController::class, 'import'])->name('import');
+        Route::delete('/batch', [\App\Http\Controllers\AdministrasiController::class, 'deleteBatch'])->name('delete.batch');
+    });
 });
+
+// Administrasi Public Check
+Route::get('/administrasi/cek', [\App\Http\Controllers\AdministrasiController::class, 'check']);

@@ -2,6 +2,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import { database } from '../firebase';
+import { ref as dbRef, onValue, push, set } from "firebase/database";
 
 const router = useRouter();
 
@@ -53,6 +55,7 @@ async function fetchBeranda() {
           title: item.judul,
           description: item.deskripsi,
           gambar: item.gambar,
+          file_lampiran: item.file_lampiran,
           dateLabel: dateObj.toLocaleDateString('id-ID', dateOptions)
         };
       };
@@ -88,19 +91,36 @@ function setCategory(id) {
   currentCategory.value = id;
 }
 
-async function fetchComments(infoId, kategori) {
-  try {
-    const resComments = await axios.get(`/komentar?info_id=${infoId}&kategori=${kategori}`);
-    if (resComments.data.status === 'success') {
-      comments.value = resComments.data.data.map(c => ({
-        id: c.id,
-        author: c.nama,
-        text: c.isi
-      }));
-    }
-  } catch (err) {
-    console.error('Failed to fetch comments', err);
+let commentsUnsubscribe = null;
+
+function fetchComments(infoId, kategori) {
+  const commentsRef = dbRef(database, `comments/${kategori}_${infoId}`);
+  
+  if (commentsUnsubscribe) {
+    commentsUnsubscribe();
   }
+  
+  commentsUnsubscribe = onValue(commentsRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      const loadedComments = [];
+      for (const key in data) {
+        loadedComments.push({
+          id: key,
+          author: data[key].author,
+          text: data[key].text,
+          timestamp: data[key].timestamp
+        });
+      }
+      // Urutkan komentar dari yang terbaru
+      loadedComments.sort((a, b) => b.timestamp - a.timestamp);
+      comments.value = loadedComments;
+    } else {
+      comments.value = [];
+    }
+  }, (error) => {
+    console.error('Failed to fetch comments', error);
+  });
 }
 
 function openDetail(item) {
@@ -110,6 +130,10 @@ function openDetail(item) {
 }
 
 function goBack() {
+  if (commentsUnsubscribe) {
+    commentsUnsubscribe();
+    commentsUnsubscribe = null;
+  }
   selectedInfo.value = null;
   viewMode.value = 'index';
 }
@@ -127,14 +151,16 @@ async function addComment() {
   if (newComment.value.trim() && selectedInfo.value) {
     try {
       const commenterName = currentUser.value ? currentUser.value.name : 'Siswa / Orang Tua';
-      await axios.post('/komentar', {
-        nama: commenterName,
-        isi: newComment.value.trim(),
-        info_id: selectedInfo.value.id,
-        kategori: currentCategory.value
+      const commentsListRef = dbRef(database, `comments/${currentCategory.value}_${selectedInfo.value.id}`);
+      const newCommentRef = push(commentsListRef);
+      
+      await set(newCommentRef, {
+        author: commenterName,
+        text: newComment.value.trim(),
+        timestamp: Date.now()
       });
+      
       newComment.value = '';
-      await fetchComments(selectedInfo.value.id, currentCategory.value);
     } catch (err) {
       console.error(err);
       alert('Gagal mengirim komentar');
@@ -148,12 +174,13 @@ async function addComment() {
     <!-- Navbar -->
     <nav class="navbar">
       <div class="navbar-container">
-        <div class="brand" style="display: flex; align-items: center; gap: 15px;">
+        <div class="brand" style="display: flex; align-items: center; gap: 15px; cursor: pointer;" @click="router.push('/')">
           <img src="../assets/logo.png" alt="Logo SMK" style="height: 40px; width: auto;" />
           <img src="../assets/Vokasi-Indonesia.png" alt="Logo Vokasi" style="height: 40px; width: auto;" />
           <span class="brand-text">SMK Tunas Harapan Pati</span>
         </div>
-        <div class="nav-action">
+        <div class="nav-action" style="display: flex; gap: 20px; align-items: center;">
+          <span class="profile-label" @click="router.push('/cek-administrasi')">Cek Administrasi</span>
           <span 
             v-if="currentUser && currentUser.email === 'admin@gmail.com'" 
             class="profile-label" 
@@ -221,6 +248,12 @@ async function addComment() {
             <div class="detail-desc">
               <p>{{ selectedInfo.description }}</p>
             </div>
+            <div v-if="selectedInfo.file_lampiran" class="detail-attachment" style="margin-top: 20px;">
+              <a :href="getImageUrl(selectedInfo.file_lampiran)" target="_blank" download class="btn btn-blue" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Download File Lampiran
+              </a>
+            </div>
           </div>
         </div>
 
@@ -240,6 +273,9 @@ async function addComment() {
             
             <div class="comments-list">
               <div v-for="comment in comments" :key="comment.id" class="comment-card">
+                <div class="comment-avatar">
+                  {{ comment.author ? comment.author.charAt(0).toUpperCase() : '?' }}
+                </div>
                 <div class="comment-content">
                   <span class="comment-author">{{ comment.author }}</span>
                   <p class="comment-text">{{ comment.text }}</p>
@@ -537,26 +573,52 @@ async function addComment() {
 
 .comment-card {
   display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  background-color: #fff;
+  border: 1px solid #eaeaea;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+  transition: transform 0.2s;
+}
+
+.comment-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.comment-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-blue), #4a90e2);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.comment-content {
+  display: flex;
   flex-direction: column;
-  background-color: #e9ecef;
-  padding: 10px 15px;
-  border-radius: 4px;
+  gap: 5px;
 }
 
 .comment-author {
-  font-size: 12px;
+  font-size: 14px;
   color: #555;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .comment-text {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-dark);
-  font-weight: 500;
-  background-color: #e2e2e2;
-  padding: 5px 8px;
-  margin-top: 5px;
-  display: inline-block;
+  line-height: 1.5;
+  margin: 0;
 }
 
 /* Bottom Nav Controls */

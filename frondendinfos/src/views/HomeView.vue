@@ -34,12 +34,11 @@ function handleEntry() {
     <!-- Navbar -->
     <nav class="navbar">
       <div class="navbar-container">
-        <div class="brand" style="display: flex; align-items: center; gap: 15px;">
+        <div class="brand" style="display: flex; align-items: center; gap: 15px; cursor: pointer;" @click="router.push('/')">
           <img src="../assets/logo.png" alt="Logo SMK" style="height: 40px; width: auto;" />
           <img src="../assets/Vokasi-Indonesia.png" alt="Logo Vokasi" style="height: 40px; width: auto;" />
           <span class="brand-text">SMK Tunas Harapan Pati</span>
         </div>
-
       </div>
     </nav>
 
@@ -115,7 +114,17 @@ function handleEntry() {
   color: var(--text-dark);
 }
 
+.nav-link {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: color 0.2s;
+}
 
+.nav-link:hover {
+  color: var(--primary-blue);
+}
 
 /* --- HERO SECTION --- */
 .hero {

@@ -32,7 +32,8 @@ class AdminLiburController extends Controller
             'judul' => 'required|string|max:255',
             'tanggal' => 'required|date',
             'keterangan' => 'required|string',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'file_lampiran' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx|max:10240'
         ]);
 
         $data = [
@@ -43,6 +44,10 @@ class AdminLiburController extends Controller
 
         if ($request->hasFile('gambar')) {
             $data['gambar'] = $request->file('gambar')->store('info_gambar', 'public');
+        }
+
+        if ($request->hasFile('file_lampiran')) {
+            $data['file_lampiran'] = $request->file('file_lampiran')->store('lampiran', 'public');
         }
 
         $libur = HariLibur::create($data);
@@ -68,7 +73,8 @@ class AdminLiburController extends Controller
             'judul' => 'required|string|max:255',
             'tanggal' => 'required|date',
             'keterangan' => 'required|string',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
+            'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'file_lampiran' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx|max:10240'
         ]);
 
         $libur = HariLibur::findOrFail($id);
@@ -86,6 +92,13 @@ class AdminLiburController extends Controller
             $data['gambar'] = $request->file('gambar')->store('info_gambar', 'public');
         }
 
+        if ($request->hasFile('file_lampiran')) {
+            if ($libur->file_lampiran && \Storage::disk('public')->exists($libur->file_lampiran)) {
+                \Storage::disk('public')->delete($libur->file_lampiran);
+            }
+            $data['file_lampiran'] = $request->file('file_lampiran')->store('lampiran', 'public');
+        }
+
         $libur->update($data);
 
         if ($request->expectsJson()) {
@@ -99,6 +112,14 @@ class AdminLiburController extends Controller
     public function destroy(Request $request, $id)
     {
         $libur = HariLibur::findOrFail($id);
+        
+        if ($libur->gambar && \Storage::disk('public')->exists($libur->gambar)) {
+            \Storage::disk('public')->delete($libur->gambar);
+        }
+        if ($libur->file_lampiran && \Storage::disk('public')->exists($libur->file_lampiran)) {
+            \Storage::disk('public')->delete($libur->file_lampiran);
+        }
+
         $libur->delete();
 
         if ($request->expectsJson()) {

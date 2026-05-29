@@ -128,6 +128,9 @@ function goToBeranda() {
           <span class="logo-subtitle">SMK Bisa SMK Hebat</span>
         </div>
       </div>
+      <div class="nav-right" style="display: flex; gap: 20px; align-items: center;">
+        <span class="nav-link" @click="router.push('/cek-administrasi')">Cek Administrasi</span>
+      </div>
     </nav>
 
     <main class="main-content">
@@ -217,13 +220,16 @@ function goToBeranda() {
 
 /* --- NAVBAR --- */
 .profile-navbar {
-  background-color: #d8d8d8; /* Light gray from wireframe */
-  height: 65px;
+  background-color: #ffffff;
+  height: 70px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 40px;
-  border-bottom: 2px solid #ccc;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .logo-text {
@@ -246,6 +252,18 @@ function goToBeranda() {
   font-size: 15px;
   font-weight: 600;
   color: #333;
+}
+
+.nav-link {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: var(--primary-blue, #0d6efd);
 }
 
 /* --- MAIN CONTENT --- */
@@ -297,12 +315,12 @@ function goToBeranda() {
   width: 140px;
   height: 140px;
   border-radius: 50%;
-  background-color: #ddd;
+  background-color: #f0f0f0;
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  border: 4px solid white;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  border: 3px solid #ffffff;
 }
 
 .profile-photo {
@@ -344,11 +362,13 @@ function goToBeranda() {
 
 .profile-info-box {
   flex: 1;
-  background-color: #e0e0e0;
-  border-radius: 8px;
+  background-color: #ffffff;
+  border-radius: 12px;
   padding: 30px;
   min-height: 120px;
   position: relative;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  border: 1px solid #eaeaea;
 }
 
 .info-view {
@@ -372,19 +392,22 @@ function goToBeranda() {
 
 .btn-edit {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  background-color: transparent;
-  border: 1px solid #999;
-  padding: 6px 12px;
-  border-radius: 4px;
+  top: 25px;
+  right: 25px;
+  background-color: #ffffff;
+  color: #0d6efd;
+  border: 1px solid #0d6efd;
+  padding: 8px 16px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
   transition: all 0.2s;
 }
 
 .btn-edit:hover {
-  background-color: #ccc;
+  background-color: #0d6efd;
+  color: #ffffff;
 }
 
 /* Edit Form */
@@ -417,10 +440,12 @@ function goToBeranda() {
 
 /* --- ABOUT ME --- */
 .about-section {
-  background-color: #dcdcdc;
+  background-color: #ffffff;
   padding: 30px;
-  border-radius: 8px;
+  border-radius: 12px;
   margin-bottom: 30px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  border: 1px solid #eaeaea;
 }
 
 .about-header h3 {
@@ -431,8 +456,9 @@ function goToBeranda() {
 }
 
 .about-content {
-  background-color: transparent;
-  border: 1px solid #999;
+  background-color: #f9f9f9;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
   padding: 20px;
   min-height: 150px;
   font-size: 16px;
@@ -443,12 +469,18 @@ function goToBeranda() {
 .form-textarea {
   width: 100%;
   padding: 15px;
-  border: 1px solid #999;
-  border-radius: 4px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
   font-size: 16px;
   resize: vertical;
-  background-color: #fafafa;
+  background-color: #ffffff;
   font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: #0d6efd;
 }
 
 /* --- EDIT ACTIONS --- */
@@ -490,10 +522,12 @@ function goToBeranda() {
 }
 
 .btn-beranda {
-  background-color: white;
-  border: 1px solid #333;
-  padding: 10px 30px;
-  font-size: 18px;
+  background-color: #ffffff;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 12px 30px;
+  border-radius: 6px;
+  font-size: 16px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -501,6 +535,7 @@ function goToBeranda() {
 
 .btn-beranda:hover {
   background-color: #f0f0f0;
+  border-color: #aaa;
 }
 
 /* Responsive */

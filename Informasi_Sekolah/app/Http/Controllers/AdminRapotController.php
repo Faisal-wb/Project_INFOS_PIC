@@ -42,7 +42,8 @@ class AdminRapotController extends Controller
             'waktu_selesai'  => 'nullable|date_format:H:i',
             'kelas'          => 'nullable|string|max:50',
             'lokasi'         => 'nullable|string|max:255',
-            'gambar'         => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
+            'gambar'         => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'file_lampiran'  => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx|max:10240'
         ]);
 
         $data = $request->only([
@@ -51,6 +52,10 @@ class AdminRapotController extends Controller
 
         if ($request->hasFile('gambar')) {
             $data['gambar'] = $request->file('gambar')->store('info_gambar', 'public');
+        }
+
+        if ($request->hasFile('file_lampiran')) {
+            $data['file_lampiran'] = $request->file('file_lampiran')->store('lampiran', 'public');
         }
 
         $jadwal = JadwalRapot::create($data);
@@ -84,7 +89,8 @@ class AdminRapotController extends Controller
             'waktu_selesai'  => 'nullable|date_format:H:i',
             'kelas'          => 'nullable|string|max:50',
             'lokasi'         => 'nullable|string|max:255',
-            'gambar'         => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120'
+            'gambar'         => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'file_lampiran'  => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx|max:10240'
         ]);
 
         $jadwal = JadwalRapot::findOrFail($id);
@@ -98,6 +104,13 @@ class AdminRapotController extends Controller
                 \Storage::disk('public')->delete($jadwal->gambar);
             }
             $data['gambar'] = $request->file('gambar')->store('info_gambar', 'public');
+        }
+
+        if ($request->hasFile('file_lampiran')) {
+            if ($jadwal->file_lampiran && \Storage::disk('public')->exists($jadwal->file_lampiran)) {
+                \Storage::disk('public')->delete($jadwal->file_lampiran);
+            }
+            $data['file_lampiran'] = $request->file('file_lampiran')->store('lampiran', 'public');
         }
 
         $jadwal->update($data);
@@ -115,6 +128,14 @@ class AdminRapotController extends Controller
     public function destroy(Request $request, $id)
     {
         $jadwal = JadwalRapot::findOrFail($id);
+        
+        if ($jadwal->gambar && \Storage::disk('public')->exists($jadwal->gambar)) {
+            \Storage::disk('public')->delete($jadwal->gambar);
+        }
+        if ($jadwal->file_lampiran && \Storage::disk('public')->exists($jadwal->file_lampiran)) {
+            \Storage::disk('public')->delete($jadwal->file_lampiran);
+        }
+
         $jadwal->delete();
 
         if ($request->expectsJson()) {

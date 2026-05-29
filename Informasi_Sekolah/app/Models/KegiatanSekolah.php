@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class KegiatanSekolah extends Model
 {
-    protected $fillable = ['judul', 'deskripsi', 'tanggal', 'waktu_mulai', 'waktu_selesai', 'lokasi', 'gambar'];
+    protected $fillable = ['judul', 'deskripsi', 'tanggal', 'waktu_mulai', 'waktu_selesai', 'lokasi', 'gambar', 'file_lampiran'];
 
     protected function casts(): array
     {

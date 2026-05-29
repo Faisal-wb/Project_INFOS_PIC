@@ -1,12 +1,14 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import { database } from '../firebase';
+import { ref as dbRef, onValue, push, set, remove } from "firebase/database";
 
 const router = useRouter();
 
-// 'list' | 'add' | 'edit'
 const viewMode = ref('list');
+const activeTab = ref('informasi'); // 'informasi' or 'administrasi'
 
 const infoList = ref([]);
 const comments = ref([]);
@@ -16,6 +18,63 @@ const newComment = ref('');
 
 const formData = ref({ id: null, kategori: 'libur', judul: '', tanggal: '', keterangan: '' });
 const selectedFile = ref(null);
+const selectedLampiran = ref(null);
+
+// Administrasi state
+const adminisKelas = ref('');
+const adminisAsesmen = ref('');
+const adminisTanggal = ref('');
+const adminisFile = ref(null);
+const adminisLoading = ref(false);
+const administrasiList = ref([]);
+const administrasiFilterKelas = ref('');
+const expandedClasses = ref({});
+
+function toggleKelas(kelas) {
+  expandedClasses.value[kelas] = !expandedClasses.value[kelas];
+}
+
+const groupedAdministrasi = computed(() => {
+  const groups = {};
+  administrasiList.value.forEach(item => {
+    const key = `${item.kelas}|${item.asesmen}`;
+    if (!groups[key]) {
+      groups[key] = [];
+    }
+    groups[key].push(item);
+  });
+  return groups;
+});
+
+async function fetchAdministrasiData() {
+  try {
+    const url = administrasiFilterKelas.value 
+      ? `/admin/administrasi?kelas=${encodeURIComponent(administrasiFilterKelas.value)}`
+      : '/admin/administrasi';
+    const res = await axios.get(url);
+    if (res.data.status === 'success') {
+      administrasiList.value = res.data.data;
+    }
+  } catch (err) {
+    console.error('Failed to fetch administrasi data', err);
+  }
+}
+
+async function deleteAdministrasiBatch(key) {
+  const parts = key.split('|');
+  const kelas = parts[0];
+  const asesmen = parts[1];
+  if (confirm(`Yakin ingin menghapus SEMUA data administrasi untuk kelas ${kelas} pada asesmen ${asesmen}?`)) {
+    try {
+      await axios.delete('/admin/administrasi/batch', { data: { kelas, asesmen } });
+      alert('Data berhasil dihapus');
+      fetchAdministrasiData();
+    } catch (err) {
+      console.error(err);
+      alert('Gagal menghapus data batch');
+    }
+  }
+}
 
 async function fetchAdminData() {
   try {
@@ -50,11 +109,13 @@ async function fetchAdminData() {
 
 onMounted(() => {
   fetchAdminData();
+  fetchAdministrasiData();
 });
 
 function goToAdd() {
   formData.value = { id: null, kategori: 'libur', judul: '', tanggal: '', keterangan: '' };
   selectedFile.value = null;
+  selectedLampiran.value = null;
   viewMode.value = 'add';
 }
 
@@ -67,6 +128,7 @@ function goToEdit(item) {
     keterangan: item.deskripsi
   };
   selectedFile.value = null;
+  selectedLampiran.value = null;
   viewMode.value = 'edit';
   fetchComments(item.id, item.kategori);
 }
@@ -75,22 +137,86 @@ function handleFileChange(event) {
   selectedFile.value = event.target.files[0];
 }
 
-async function fetchComments(infoId, kategori) {
+function handleLampiranChange(event) {
+  selectedLampiran.value = event.target.files[0];
+}
+
+function handleAdminisFileChange(event) {
+  adminisFile.value = event.target.files[0];
+}
+
+async function uploadAdministrasi() {
+  if (!adminisKelas.value || !adminisAsesmen.value || !adminisTanggal.value || !adminisFile.value) {
+    alert('Kelas, Asesmen, Tanggal, dan file Excel harus diisi!');
+    return;
+  }
+  
+  adminisLoading.value = true;
   try {
-    const resComments = await axios.get(`/komentar?info_id=${infoId}&kategori=${kategori}`);
-    if (resComments.data.status === 'success') {
-      comments.value = resComments.data.data.map(c => ({
-        id: c.id,
-        author: c.nama,
-        text: c.isi
-      }));
-    }
+    const payload = new FormData();
+    payload.append('kelas', adminisKelas.value);
+    payload.append('asesmen', adminisAsesmen.value);
+    payload.append('tanggal', adminisTanggal.value);
+    payload.append('file', adminisFile.value);
+    
+    const res = await axios.post('/admin/administrasi/import', payload, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    
+    alert(res.data.message || 'Berhasil upload data administrasi');
+    adminisKelas.value = '';
+    adminisAsesmen.value = '';
+    adminisTanggal.value = '';
+    adminisFile.value = null;
+    // reset file input
+    document.getElementById('adminisFile').value = '';
+    
+    // Refresh the table
+    fetchAdministrasiData();
   } catch (err) {
-    console.error('Failed to fetch comments', err);
+    console.error(err);
+    alert('Gagal mengupload data: ' + (err.response?.data?.message || err.message));
+  } finally {
+    adminisLoading.value = false;
   }
 }
 
+let commentsUnsubscribe = null;
+
+function fetchComments(infoId, kategori) {
+  const commentsRef = dbRef(database, `comments/${kategori}_${infoId}`);
+  
+  if (commentsUnsubscribe) {
+    commentsUnsubscribe();
+  }
+  
+  commentsUnsubscribe = onValue(commentsRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      const loadedComments = [];
+      for (const key in data) {
+        loadedComments.push({
+          id: key,
+          author: data[key].author,
+          text: data[key].text,
+          timestamp: data[key].timestamp
+        });
+      }
+      loadedComments.sort((a, b) => b.timestamp - a.timestamp);
+      comments.value = loadedComments;
+    } else {
+      comments.value = [];
+    }
+  }, (error) => {
+    console.error('Failed to fetch comments', error);
+  });
+}
+
 function goToList() {
+  if (commentsUnsubscribe) {
+    commentsUnsubscribe();
+    commentsUnsubscribe = null;
+  }
   viewMode.value = 'list';
 }
 
@@ -106,6 +232,10 @@ async function savePost() {
     
     if (selectedFile.value) {
       payload.append('gambar', selectedFile.value);
+    }
+    
+    if (selectedLampiran.value) {
+      payload.append('file_lampiran', selectedLampiran.value);
     }
 
     if (viewMode.value === 'add') {
@@ -147,10 +277,8 @@ async function deletePost() {
 async function deleteComment(id) {
   if (confirm('Yakin ingin menghapus komentar ini?')) {
     try {
-      await axios.delete(`/komentar/${id}`);
-      if (formData.value.id) {
-        await fetchComments(formData.value.id, formData.value.kategori);
-      }
+      const commentRef = dbRef(database, `comments/${formData.value.kategori}_${formData.value.id}/${id}`);
+      await remove(commentRef);
     } catch (err) {
       console.error(err);
       alert('Gagal menghapus komentar');
@@ -162,14 +290,16 @@ async function addComment() {
   if (newComment.value.trim() && formData.value.id) {
     try {
       const commenterName = currentUser.value ? currentUser.value.name : 'Admin';
-      await axios.post('/komentar', {
-        nama: commenterName,
-        isi: newComment.value.trim(),
-        info_id: formData.value.id,
-        kategori: formData.value.kategori
+      const commentsListRef = dbRef(database, `comments/${formData.value.kategori}_${formData.value.id}`);
+      const newCommentRef = push(commentsListRef);
+      
+      await set(newCommentRef, {
+        author: commenterName,
+        text: newComment.value.trim(),
+        timestamp: Date.now()
       });
+      
       newComment.value = '';
-      await fetchComments(formData.value.id, formData.value.kategori);
     } catch (err) {
       console.error(err);
       alert('Gagal menambah komentar');
@@ -210,8 +340,20 @@ function handleBeranda() {
     <!-- Main Content Area -->
     <main class="main-content">
       
-      <!-- === LIST VIEW === -->
-      <div v-if="viewMode === 'list'" class="view-container">
+      <!-- Top Tabs -->
+      <div class="admin-tabs">
+        <button :class="['tab-btn', { active: activeTab === 'informasi' }]" @click="activeTab = 'informasi'">
+          Manajemen Informasi
+        </button>
+        <button :class="['tab-btn', { active: activeTab === 'administrasi' }]" @click="activeTab = 'administrasi'">
+          Data Administrasi
+        </button>
+      </div>
+
+      <!-- === INFORMASI TAB === -->
+      <div v-if="activeTab === 'informasi'">
+        <!-- === LIST VIEW === -->
+        <div v-if="viewMode === 'list'" class="view-container">
         <div class="header-action-row">
           <div>
             <h1 class="page-title">Manajemen Informasi</h1>
@@ -265,6 +407,11 @@ function handleBeranda() {
           </div>
           
           <div class="form-group">
+            <label>File Lampiran (PDF/Doc - Opsional)</label>
+            <input type="file" @change="handleLampiranChange" accept=".pdf,.doc,.docx,.xls,.xlsx" class="form-input" style="padding: 9px 12px;" />
+          </div>
+          
+          <div class="form-group">
             <label>Keterangan</label>
             <textarea v-model="formData.keterangan" class="form-input textarea" rows="4"></textarea>
           </div>
@@ -289,12 +436,108 @@ function handleBeranda() {
             </div>
             <div class="comments-list">
               <div v-for="comment in comments" :key="comment.id" class="comment-card">
-                <div class="comment-content">
-                  <span class="comment-author">{{ comment.author }}</span>
-                  <p class="comment-text">{{ comment.text }}</p>
+                <div style="display: flex; gap: 15px; align-items: flex-start;">
+                  <div class="comment-avatar">
+                    {{ comment.author ? comment.author.charAt(0).toUpperCase() : '?' }}
+                  </div>
+                  <div class="comment-content">
+                    <span class="comment-author">{{ comment.author }}</span>
+                    <p class="comment-text">{{ comment.text }}</p>
+                  </div>
                 </div>
-                <button class="btn btn-red" @click="deleteComment(comment.id)">Delete</button>
+                <button class="btn btn-red btn-sm" @click="deleteComment(comment.id)">Hapus</button>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div> <!-- Close activeTab === informasi -->
+
+      <!-- === ADMINISTRASI TAB === -->
+      <div v-if="activeTab === 'administrasi'" class="view-container form-view">
+        <div class="form-card">
+          <h2 class="form-title">Upload Data Administrasi</h2>
+          <p style="margin-bottom: 20px; color: #555;">Upload file Excel berisi data pembayaran. Pastikan ada kolom "nis", "nama", "status_bayar".</p>
+          
+          <div class="form-group">
+            <label>Kelas</label>
+            <input type="text" v-model="adminisKelas" placeholder="Contoh: X RPL 1" class="form-input" />
+          </div>
+          
+          <div class="form-group">
+            <label>Asesmen</label>
+            <select v-model="adminisAsesmen" class="form-input">
+              <option value="" disabled>Pilih Asesmen</option>
+              <option value="ASTS (Asesmen Sumatif Tengah Semester)">ASTS (Asesmen Sumatif Tengah Semester)</option>
+              <option value="ASAS (Asesmen Sumatif Akhir Semester)">ASAS (Asesmen Sumatif Akhir Semester)</option>
+              <option value="ASAT (Asesmen Sumatif Akhir Tahun)">ASAT (Asesmen Sumatif Akhir Tahun)</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Tanggal Tagihan</label>
+            <input type="date" v-model="adminisTanggal" class="form-input" />
+          </div>
+          
+          <div class="form-group">
+            <label>File Excel</label>
+            <input type="file" id="adminisFile" @change="handleAdminisFileChange" accept=".xlsx,.xls,.csv" class="form-input" style="padding: 9px 12px;" />
+          </div>
+          
+          <div class="form-actions">
+            <button class="btn btn-blue" @click="uploadAdministrasi" :disabled="adminisLoading">
+              {{ adminisLoading ? 'Mengupload...' : 'Upload Data' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="content-box" style="margin-top: 30px;">
+          <div class="header-action-row" style="margin-bottom: 20px;">
+            <h2 class="form-title" style="margin-bottom: 0;">Daftar Data Administrasi</h2>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="text" v-model="administrasiFilterKelas" placeholder="Filter Kelas..." class="form-input" style="padding: 8px 12px; width: 150px;" @keyup.enter="fetchAdministrasiData" />
+              <button class="btn btn-blue" @click="fetchAdministrasiData">Filter</button>
+            </div>
+          </div>
+          
+          <div style="overflow-x: auto;">
+            <template v-if="Object.keys(groupedAdministrasi).length > 0">
+              <div v-for="(items, key) in groupedAdministrasi" :key="key" style="margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; padding: 10px 15px; border-radius: 4px; border-left: 4px solid var(--primary-blue); margin-bottom: 10px; cursor: pointer;" @click="toggleKelas(key)">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 14px; font-weight: bold; color: #555; width: 15px; text-align: center;">{{ expandedClasses[key] ? '▼' : '▶' }}</span>
+                    <h3 style="margin: 0; font-size: 18px; color: #333;">Kelas: {{ key.split('|')[0] }} - {{ key.split('|')[1] }}</h3>
+                  </div>
+                  <button class="btn btn-red" style="padding: 4px 10px; font-size: 12px;" @click.stop="deleteAdministrasiBatch(key)">Hapus Data Ini</button>
+                </div>
+                <table class="data-table" v-if="expandedClasses[key]">
+                  <thead>
+                    <tr>
+                      <th>NIS</th>
+                      <th>Nama Siswa</th>
+                      <th>Asesmen</th>
+                      <th>Tanggal Tagihan</th>
+                      <th>Status Bayar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="item in items" :key="item.id">
+                      <td>{{ item.nis }}</td>
+                      <td>{{ item.nama_siswa }}</td>
+                      <td>{{ item.asesmen || '-' }}</td>
+                      <td>{{ item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID') : '-' }}</td>
+                      <td>
+                        <span class="status-badge" :class="item.status_bayar.toLowerCase().includes('belum') ? 'belum' : 'lunas'">
+                          {{ item.status_bayar }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </template>
+            <div v-else style="text-align: center; padding: 20px; color: #777;">
+              Tidak ada data ditemukan.
             </div>
           </div>
         </div>
@@ -378,6 +621,35 @@ function handleBeranda() {
 }
 
 /* Header & Action Row */
+.admin-tabs {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  font-weight: 600;
+  color: #777;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: var(--primary-blue);
+}
+
+.tab-btn.active {
+  color: var(--primary-blue);
+  border-bottom-color: var(--primary-blue);
+}
+
 .header-action-row {
   display: flex;
   justify-content: space-between;
@@ -500,29 +772,50 @@ function handleBeranda() {
 .comment-card {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   background-color: #fff;
-  border: 1px solid #e9ecef;
-  padding: 12px 15px;
-  border-radius: 6px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+  border: 1px solid #eaeaea;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+}
+
+.comment-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-orange), #ff8c42);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  flex-shrink: 0;
 }
 
 .comment-content {
   display: flex;
   flex-direction: column;
+  gap: 5px;
 }
 
 .comment-author {
-  font-size: 12px;
-  color: #888;
-  font-weight: 500;
+  font-size: 14px;
+  color: #555;
+  font-weight: 600;
 }
 
 .comment-text {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-dark);
-  font-weight: 500;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
 }
 
 /* Form View (Add/Edit) */
@@ -627,5 +920,43 @@ function handleBeranda() {
   .main-content {
     padding: 30px 20px;
   }
+}
+
+/* --- TABLE STYLES --- */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.data-table th, .data-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.data-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+}
+
+.data-table tr:hover {
+  background-color: #f1f3f5;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.status-badge.lunas {
+  background-color: #d4edda;
+  color: #155724;
+}
+.status-badge.belum {
+  background-color: #f8d7da;
+  color: #721c24;
 }
 </style>

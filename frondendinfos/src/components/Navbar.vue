@@ -6,9 +6,8 @@ const isMobileMenuOpen = ref(false)
 
 const navLinks = [
   { name: 'Beranda', path: '/' },
-  { name: 'Informasi', path: '/informasi' },
-  { name: 'Galeri', path: '/galeri' },
-  { name: 'Hubungi Kami', path: '/kontak' },
+  { name: 'Informasi', path: '/beranda' },
+  { name: 'Cek Administrasi', path: '/cek-administrasi' },
 ]
 
 function handleScroll() { isScrolled.value = window.scrollY > 50 }
