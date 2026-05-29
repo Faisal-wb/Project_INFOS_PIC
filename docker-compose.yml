@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: informasi_sekolah
+      MYSQL_USER: laravel_user
+      MYSQL_PASSWORD: rahasia123
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  backend:
+    build:
+      context: ./Informasi_Sekolah
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=informasi_sekolah
+      - DB_USERNAME=laravel_user
+      - DB_PASSWORD=rahasia123
+    depends_on:
+      - db
+    volumes:
+      - ./Informasi_Sekolah:/app
+
+  frontend:
+    build:
+      context: ./frondendinfos
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - VITE_API_URL=http://backend:8000
+    volumes:
+      - ./frondendinfos:/app
+      - /app/node_modules
+
+volumes:
+  db_data:
