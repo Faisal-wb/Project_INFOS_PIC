@@ -30,8 +30,8 @@ COPY . /app
 RUN composer install --no-interaction --optimize-autoloader || true
 
 # Copy wait-for-it or just rely on restart policy
-# Expose port 8000
-EXPOSE 8000
+# Expose port 8080
+EXPOSE 8080
 
 # Start development server
-CMD php artisan storage:link || true && php artisan serve --host=0.0.0.0 --port=8000
+CMD php artisan storage:link || true && php artisan serve --host=0.0.0.0 --port=8080
