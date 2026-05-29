@@ -30,9 +30,18 @@ const comments = ref([]);
 
 const newComment = ref('');
 
+const currentPage = ref(1);
+const itemsPerPage = 5;
+
 // Computed
 const currentInfos = computed(() => infos.value[currentCategory.value] || []);
 const categoryName = computed(() => categories.find(c => c.id === currentCategory.value)?.name);
+
+const totalPages = computed(() => Math.ceil(currentInfos.value.length / itemsPerPage));
+const paginatedInfos = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  return currentInfos.value.slice(start, start + itemsPerPage);
+});
 
 // Methods
 async function fetchBeranda() {
@@ -89,6 +98,15 @@ onMounted(() => {
 // Methods
 function setCategory(id) {
   currentCategory.value = id;
+  currentPage.value = 1;
+}
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) currentPage.value++;
+}
+
+function prevPage() {
+  if (currentPage.value > 1) currentPage.value--;
 }
 
 let commentsUnsubscribe = null;
@@ -217,7 +235,7 @@ async function addComment() {
           </div>
           
           <div class="info-list">
-            <div v-for="item in currentInfos" :key="item.id" class="info-item-wrapper">
+            <div v-for="item in paginatedInfos" :key="item.id" class="info-item-wrapper">
               <div class="date-label">{{ item.dateLabel }}</div>
               <div class="info-card clickable" @click="openDetail(item)">
                 <span class="info-title">{{ item.title }}</span>
@@ -226,6 +244,13 @@ async function addComment() {
             
             <div v-if="currentInfos.length === 0" class="empty-state">
               Tidak ada pengumuman saat ini.
+            </div>
+
+            <!-- Pagination Controls -->
+            <div class="pagination" v-if="totalPages > 1">
+              <button class="btn btn-outline" @click="prevPage" :disabled="currentPage === 1">Sebelumnya</button>
+              <span class="page-info">Halaman {{ currentPage }} dari {{ totalPages }}</span>
+              <button class="btn btn-outline" @click="nextPage" :disabled="currentPage === totalPages">Selanjutnya</button>
             </div>
           </div>
         </div>
@@ -461,6 +486,31 @@ async function addComment() {
   font-style: italic;
   font-size: 16px;
   margin-top: 20px;
+}
+
+/* --- PAGINATION --- */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.pagination .btn {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.pagination .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 15px;
+  color: #555;
+  font-weight: 500;
 }
 
 /* --- DETAIL VIEW --- */
