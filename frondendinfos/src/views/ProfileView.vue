@@ -118,80 +118,90 @@ function goToBeranda() {
 
 <template>
   <div class="profile-page">
-    <main class="main-content">
-      
-      <!-- Header Action Row (Like AdminView) -->
-      <div class="header-action-row" style="margin-bottom: 30px;">
-        <div>
-          <h1 class="page-title">Profil Pengguna</h1>
-          <p class="page-subtitle">Kelola informasi profil dan detail kontak Anda</p>
+    <!-- Navbar Custom for Profile -->
+    <nav class="profile-navbar">
+      <div class="nav-left">
+        <div class="logo-text">
+          <span class="logo-title">LOGO SMK THP</span>
+          <span class="logo-subtitle">SMK Bisa SMK Hebat</span>
         </div>
       </div>
+      <div class="nav-right">
+        <span class="school-name">SMK Tunas Harapan Pati</span>
+      </div>
+    </nav>
 
+    <main class="main-content">
+      
       <!-- Notifications -->
       <div v-if="successMessage" class="alert alert-success">{{ successMessage }}</div>
       <div v-if="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
 
-      <!-- Content Box for Profile Header -->
-      <div class="content-box">
-        <div class="profile-header-card">
-          <div class="profile-photo-container">
-            <div class="photo-wrapper" @click="triggerFileUpload">
-              <img :src="profileImageUrl" alt="Foto Profile" class="profile-photo" />
-              <div class="photo-overlay">
-                <span>Ubah Foto</span>
-              </div>
+      <!-- Profile Header -->
+      <div class="profile-header-card">
+        <div class="profile-photo-container">
+          <div class="photo-wrapper" @click="triggerFileUpload">
+            <img :src="profileImageUrl" alt="Foto Profile" class="profile-photo" />
+            <div class="photo-overlay">
+              <span>Ubah Foto</span>
             </div>
-            <input type="file" ref="fileInput" @change="handleFileUpload" accept="image/*" class="hidden-input" />
-            <span class="foto-label">Foto profile</span>
           </div>
+          <input type="file" ref="fileInput" @change="handleFileUpload" accept="image/*" class="hidden-input" />
+          <span class="foto-label">Foto profile</span>
+        </div>
 
-          <div class="profile-info-box">
-            <div v-if="!isEditing" class="info-view">
-              <h2 class="username-text">{{ user.name || 'Username' }}</h2>
-              <p class="phone-text">{{ user.no_telp || 'No telp belum diatur' }}</p>
-              <button class="btn btn-outline btn-edit" @click="isEditing = true">Edit Profil</button>
+        <div class="profile-info-box">
+          <div v-if="!isEditing" class="info-view">
+            <h2 class="username-text">{{ user.name || 'Username' }}</h2>
+            <p class="phone-text">{{ user.no_telp || 'No telp belum diatur' }}</p>
+            <button class="btn-edit" @click="isEditing = true">Edit Profil</button>
+          </div>
+          
+          <div v-else class="info-edit">
+            <div class="form-group">
+              <label>Username</label>
+              <input type="text" v-model="user.name" class="form-input" />
             </div>
-            
-            <div v-else class="info-edit">
-              <div class="form-group">
-                <label>Username</label>
-                <input type="text" v-model="user.name" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label>No telp</label>
-                <input type="text" v-model="user.no_telp" class="form-input" placeholder="08xxxxxxxxxx" />
-              </div>
+            <div class="form-group">
+              <label>No telp</label>
+              <input type="text" v-model="user.no_telp" class="form-input" placeholder="08xxxxxxxxxx" />
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Content Box for About Me -->
-      <div class="content-box" style="margin-top: 30px;">
-        <div class="about-header">
-          <h3>About me</h3>
-        </div>
-        
-        <div v-if="!isEditing" class="about-content">
-          <p>{{ user.about_me || 'Belum ada deskripsi tentang saya.' }}</p>
-        </div>
-        
-        <div v-else class="about-edit">
-          <textarea v-model="user.about_me" class="form-input textarea" rows="6" placeholder="Ceritakan tentang diri Anda..."></textarea>
-        </div>
-
-        <!-- Edit Actions -->
-        <div v-if="isEditing" class="edit-actions" style="margin-top: 20px;">
-          <button class="btn btn-outline" @click="isEditing = false; fetchProfile()">Batal</button>
-          <button class="btn btn-blue" @click="handleSave">Simpan Perubahan</button>
+      <!-- About Me Section -->
+      <div class="about-section">
+        <div class="about-box">
+          <div class="about-header">
+            <h3>About me</h3>
+          </div>
+          
+          <div v-if="!isEditing" class="about-content">
+            <p>{{ user.about_me || 'Belum ada deskripsi tentang saya.' }}</p>
+          </div>
+          
+          <div v-else class="about-edit">
+            <textarea v-model="user.about_me" class="form-textarea" rows="6" placeholder="Ceritakan tentang diri Anda..."></textarea>
+          </div>
         </div>
       </div>
 
-      <!-- Bottom Nav Controls -->
-      <div class="bottom-nav-controls">
-        <button class="btn btn-red nav-btn" @click.prevent="handleLogout">Log out</button>
-        <button class="btn btn-outline nav-btn" @click="goToBeranda">Beranda</button>
+      <!-- Edit Actions -->
+      <div v-if="isEditing" class="edit-actions">
+        <button class="btn btn-outline" @click="isEditing = false; fetchProfile()">Batal</button>
+        <button class="btn btn-blue" @click="handleSave">Simpan Perubahan</button>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="footer-actions">
+        <div class="logout-container">
+          <a href="#" @click.prevent="handleLogout" class="logout-link">Log out?</a>
+        </div>
+        
+        <div class="beranda-container">
+          <button class="btn-beranda" @click="goToBeranda">Beranda</button>
+        </div>
       </div>
 
     </main>
@@ -201,32 +211,51 @@ function goToBeranda() {
 <style scoped>
 .profile-page {
   min-height: 100vh;
-  background-color: var(--gray-bg);
+  background-color: #fafafa;
   display: flex;
   flex-direction: column;
+}
+
+/* --- NAVBAR --- */
+.profile-navbar {
+  background-color: #d8d8d8; /* Light gray from wireframe */
+  height: 65px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  border-bottom: 2px solid #ccc;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+}
+
+.logo-subtitle {
+  font-size: 12px;
+  color: #555;
+}
+
+.school-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
 }
 
 /* --- MAIN CONTENT --- */
 .main-content {
   flex: 1;
-  width: 100%;
-  max-width: 1100px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 40px 30px 100px; /* space for bottom nav */
-  position: relative;
-}
-
-/* Header Text */
-.page-title {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--text-dark);
-  margin-bottom: 5px;
-}
-
-.page-subtitle {
-  font-size: 18px;
-  color: #666;
+  width: 100%;
+  padding: 40px 30px;
 }
 
 /* Notifications */
@@ -250,20 +279,12 @@ function goToBeranda() {
   border: 1px solid #f5c6cb;
 }
 
-/* Content Box (Standard for App) */
-.content-box {
-  background-color: var(--bg-white);
-  border-radius: 8px;
-  padding: 40px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-  border: 1px solid #dee2e6;
-}
-
 /* --- PROFILE HEADER --- */
 .profile-header-card {
   display: flex;
-  gap: 50px;
-  align-items: stretch;
+  gap: 40px;
+  align-items: flex-start;
+  margin-bottom: 40px;
 }
 
 .profile-photo-container {
@@ -274,15 +295,15 @@ function goToBeranda() {
 }
 
 .photo-wrapper {
-  width: 150px;
-  height: 150px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
-  background-color: var(--gray-bg);
+  background-color: #ddd;
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-  border: 4px solid var(--bg-white);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  border: 4px solid white;
 }
 
 .profile-photo {
@@ -294,7 +315,7 @@ function goToBeranda() {
 .photo-overlay {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(0,0,0,0.4);
+  background-color: rgba(0,0,0,0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -317,19 +338,18 @@ function goToBeranda() {
 }
 
 .foto-label {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-dark);
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
 }
 
 .profile-info-box {
   flex: 1;
-  background-color: var(--gray-bg);
+  background-color: #e0e0e0;
   border-radius: 8px;
   padding: 30px;
   min-height: 120px;
   position: relative;
-  border: 1px solid #dee2e6;
 }
 
 .info-view {
@@ -339,24 +359,33 @@ function goToBeranda() {
 }
 
 .username-text {
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--text-dark);
+  font-size: 24px;
+  font-weight: 600;
+  color: #222;
   margin: 0;
 }
 
 .phone-text {
-  font-size: 16px;
-  color: #666;
+  font-size: 18px;
+  color: #555;
   margin: 0;
 }
 
 .btn-edit {
   position: absolute;
-  top: 25px;
-  right: 25px;
-  font-size: 13px;
-  padding: 6px 15px;
+  top: 20px;
+  right: 20px;
+  background-color: transparent;
+  border: 1px solid #999;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.btn-edit:hover {
+  background-color: #ccc;
 }
 
 /* Edit Form */
@@ -369,52 +398,58 @@ function goToBeranda() {
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
 }
 
 .form-group label {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: #444;
 }
 
 .form-input {
-  padding: 12px 15px;
-  font-size: 15px;
-  font-family: inherit;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background-color: #fff;
-  transition: border-color 0.2s;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
   width: 100%;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: var(--primary-blue);
-}
-
-.textarea {
-  resize: vertical;
+  max-width: 400px;
 }
 
 /* --- ABOUT ME --- */
+.about-section {
+  background-color: #dcdcdc;
+  padding: 30px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
 .about-header h3 {
   font-size: 18px;
-  font-weight: 600;
-  color: var(--text-dark);
+  font-weight: 500;
+  color: #333;
   margin-bottom: 15px;
 }
 
 .about-content {
-  background-color: var(--gray-bg);
-  border: 1px solid #dee2e6;
+  background-color: transparent;
+  border: 1px solid #999;
   padding: 20px;
-  min-height: 120px;
-  font-size: 15px;
+  min-height: 150px;
+  font-size: 16px;
   line-height: 1.6;
   color: #444;
-  border-radius: 6px;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 15px;
+  border: 1px solid #999;
+  border-radius: 4px;
+  font-size: 16px;
+  resize: vertical;
+  background-color: #fafafa;
+  font-family: inherit;
 }
 
 /* --- EDIT ACTIONS --- */
@@ -422,53 +457,72 @@ function goToBeranda() {
   display: flex;
   justify-content: flex-end;
   gap: 15px;
+  margin-bottom: 40px;
 }
 
-/* Bottom Nav Controls */
-.bottom-nav-controls {
-  position: absolute;
-  bottom: 30px;
-  left: 30px;
-  right: 30px;
+/* --- FOOTER ACTIONS --- */
+.footer-actions {
+  position: relative;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 60px;
 }
 
-.nav-btn {
-  font-size: 15px;
-  padding: 8px 24px;
+.logout-container {
+  margin-bottom: 30px;
 }
 
-/* Responsive Overrides */
+.logout-link {
+  color: #0d6efd;
+  font-size: 18px;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.logout-link:hover {
+  text-decoration: underline;
+}
+
+.beranda-container {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
+.btn-beranda {
+  background-color: white;
+  border: 1px solid #333;
+  padding: 10px 30px;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-beranda:hover {
+  background-color: #f0f0f0;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .profile-header-card {
     flex-direction: column;
     align-items: center;
-    gap: 25px;
+    gap: 20px;
   }
   
   .profile-info-box {
     width: 100%;
   }
   
-  .btn-edit {
-    position: relative;
-    top: 0;
-    right: 0;
-    margin-top: 15px;
-    align-self: flex-start;
+  .beranda-container {
+    position: static;
+    margin-top: 20px;
   }
   
-  .bottom-nav-controls {
-    position: relative;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin-top: 40px;
-  }
-  
-  .main-content {
-    padding: 30px 20px;
+  .profile-navbar {
+    padding: 0 20px;
   }
 }
 </style>
