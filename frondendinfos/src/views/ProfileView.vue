@@ -120,14 +120,13 @@ function goToBeranda() {
   <div class="profile-page">
     <!-- Navbar Custom for Profile -->
     <nav class="profile-navbar">
-      <div class="nav-left">
+      <div class="nav-left" style="display: flex; align-items: center; gap: 15px;">
+        <img src="../assets/logo.png" alt="Logo SMK" style="height: 40px; width: auto;" />
+        <img src="../assets/Vokasi-Indonesia.png" alt="Logo Vokasi" style="height: 40px; width: auto;" />
         <div class="logo-text">
-          <span class="logo-title">LOGO SMK THP</span>
+          <span class="logo-title">SMK Tunas Harapan Pati</span>
           <span class="logo-subtitle">SMK Bisa SMK Hebat</span>
         </div>
-      </div>
-      <div class="nav-right">
-        <span class="school-name">SMK Tunas Harapan Pati</span>
       </div>
     </nav>
 
