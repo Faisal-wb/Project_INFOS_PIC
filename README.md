@@ -1,84 +1,138 @@
 # INFOS (Informasi Sekolah) - SMK Tunas Harapan Pati
 
-Sistem Informasi dan Administrasi Terpadu untuk SMK Tunas Harapan Pati. Proyek ini dibangun dengan arsitektur **Decoupled** yang memisahkan Frontend dan Backend untuk memastikan kecepatan, keamanan, dan skalabilitas.
-
-## 🚀 Fitur Utama
-
-- **Manajemen Informasi (Mading Digital):** CRUD Pengumuman (Info Libur, Kegiatan, Jadwal Rapot) dengan dukungan unggah gambar dan file lampiran (PDF/Word/Excel).
-- **Pengecekan Administrasi Siswa:** Pengecekan status pembayaran tagihan siswa berdasarkan Asesmen. Admin dapat mengunggah tagihan secara massal menggunakan file Excel.
-- **Komentar Real-Time:** Interaksi tanya jawab pada setiap pengumuman secara langsung tanpa *refresh* halaman (Powered by Firebase).
-- **Manajemen Autentikasi:** Sistem Login, Register, dan Manajemen Profil pengguna.
-- **UI/UX Modern:** Desain antarmuka kustom bergaya kalender, dilengkapi dengan sistem Paginasi (Pagination) di halaman beranda menggunakan Vanilla CSS.
-
-## 🛠️ Teknologi yang Digunakan
-
-### Frontend
-- **Framework:** Vue.js 3 (Composition API)
-- **Build Tool:** Vite
-- **Routing:** Vue Router
-- **HTTP Client:** Axios
-- **Real-Time Database:** Firebase Realtime Database
-- **Styling:** Vanilla CSS (Custom, Glassmorphism, Responsive)
-
-### Backend
-- **Framework:** Laravel 10/11 (PHP)
-- **Database:** MySQL
-- **ORM:** Eloquent
-- **Package Tambahan:** `Maatwebsite/Laravel-Excel` (Untuk import file Excel)
-- **Authentication:** Laravel Auth / Sanctum
-
-## 📂 Struktur Proyek
-
-Proyek ini dibagi menjadi dua repositori/folder utama:
-1. `Informasi_Sekolah/` - Berisi *source code* Backend Laravel API.
-2. `frondendinfos/` - Berisi *source code* Frontend Vue.js.
-
-## ⚙️ Panduan Instalasi & Menjalankan Aplikasi
-
-Ada dua cara untuk menjalankan aplikasi ini: menggunakan **Docker** (Direkomendasikan) atau menjalankannya secara manual.
-
-### Opsi 1: Menggunakan Docker (Sangat Direkomendasikan) 🐳
-Aplikasi ini sudah diatur secara lengkap agar bisa berjalan otomatis menggunakan Docker.
-```bash
-# Buka terminal di folder root (Project_INFOS_PIC)
-docker-compose up -d --build
-```
-- **Frontend** akan berjalan di: `http://localhost:5173`
-- **Backend (API)** akan berjalan di: `http://localhost:8080`
-- **Database** akan otomatis berjalan di latar belakang (port 3306).
-
-*(Catatan: Saat pertama kali dijalankan, kamu mungkin perlu membuat tabel database dengan masuk ke dalam container backend: `docker-compose exec backend php artisan migrate`)*
+Aplikasi web modern berbasis **Decoupled Architecture** (Pemisahan Frontend & Backend) yang dirancang sebagai pusat sistem informasi dan administrasi terpadu untuk SMK Tunas Harapan Pati.
 
 ---
 
-### Opsi 2: Instalasi Manual Tanpa Docker
+## 🌟 Fitur Lengkap & Teknologi Pendukung
 
-#### 1. Persiapan Backend (Laravel)
-```bash
-cd Informasi_Sekolah
-composer install
-cp .env.example .env
-php artisan key:generate
-# Sesuaikan konfigurasi database di file .env
-php artisan migrate
-php artisan storage:link
-php artisan serve --port=8080
-```
-*Backend akan berjalan di `http://localhost:8080`*
+Proyek ini memiliki fitur yang sangat kaya untuk mempermudah komunikasi dan urusan administratif sekolah. Berikut adalah daftar fitur beserta teknologi pembuatannya:
 
-#### 2. Persiapan Frontend (Vue.js)
-```bash
-cd frondendinfos
-npm install
-# Konfigurasi Firebase Anda di src/firebase.js (Jika belum disetup)
-npm run dev
-```
-*Frontend akan berjalan di `http://localhost:5173`*
+### 1. Manajemen Mading Digital (Pengumuman Sekolah)
+Pusat informasi interaktif untuk membagikan pengumuman penting sekolah.
+- **Fitur:** 
+  - CRUD (Tambah, Baca, Edit, Hapus) untuk 3 kategori: Info Libur, Kegiatan Sekolah, dan Jadwal Rapot.
+  - Mendukung unggah gambar (Banner/Poster).
+  - Mendukung unggah *File Lampiran* resmi (PDF, Word, Excel) agar dapat di-*download* pengunjung.
+- **Teknologi:** Dibuat menggunakan **Laravel Resource Controller**, **Eloquent ORM** untuk operasi database, dan **Laravel Storage** (Local Public Disk) untuk menangani *file upload* dengan aman. Tampilan daftarnya menggunakan **Vue.js Reactivity** dengan Paginasi Otomatis di sisi *Client*.
 
-## 🔒 Keamanan
-- Middleware Laravel mengamankan halaman Dashboard.
-- File upload divalidasi MIME Type-nya (hanya memperbolehkan gambar dan dokumen) untuk menghindari shell upload.
-- SQL Injection dicegah otomatis dengan menggunakan Eloquent ORM Laravel.
+### 2. Cek Tagihan & Administrasi Siswa
+Memudahkan staf Tata Usaha dan Siswa dalam mengelola keuangan.
+- **Fitur Admin:** 
+  - Admin dapat meng-*upload* tagihan ribuan siswa secara massal hanya dengan *mengunggah file Excel (.xlsx)*.
+  - Admin dapat melakukan filter dan menghapus data tagihan secara massal per kelas.
+- **Fitur Siswa:** Siswa dapat mencari status pembayarannya hanya dengan memasukkan **NIS** dan memilih jenis **Asesmen** (ASTS, ASAS, ASAT) tanpa perlu *login*.
+- **Teknologi:** Dibangun menggunakan paket **`Maatwebsite/Laravel-Excel`** untuk proses baca/tulis (*Import*) data Excel ke dalam MySQL. Antarmukanya dibuat interaktif dengan pencarian *real-time* berbasis **Vue.js Data Binding**.
+
+### 3. Kolom Komentar Real-Time ⚡
+Forum interaktif mini pada setiap halaman pengumuman.
+- **Fitur:** Siswa/Admin bisa mengirim pertanyaan/komentar dan balasannya akan langsung muncul di layar semua orang pada detik itu juga (tanpa perlu menekan tombol *refresh* browser).
+- **Teknologi:** Fitur ini ditenagai murni oleh **Firebase Realtime Database (NoSQL)**. Alih-alih membebani server Laravel, kode Vue.js langsung melakukan koneksi *WebSocket* dua arah ke *cloud* Firebase.
+
+### 4. Autentikasi & Profil Pengguna
+Keamanan sistem tingkat dasar.
+- **Fitur:** 
+  - Registrasi, Login, dan Logout.
+  - Proteksi Halaman (Dashboard Admin terkunci).
+  - Manajemen Profil (Siswa dapat mengunggah Foto Profil/Avatar secara *custom*).
+- **Teknologi:** Menggunakan sistem **Laravel Auth (Session)** untuk mengelola autentikasi dan *password* terenkripsi (Bcrypt) di *Backend*. Di sisi *Frontend*, menggunakan **Vue Router Navigation Guards** untuk menyeleksi hak akses di *browser*.
+
+### 5. UI/UX "Kalender" Custom 
+Antarmuka website yang bersih, responsif, dan menarik.
+- **Fitur:** Menampilkan tanggal dengan desain berbentuk kalender lipat (*calendar-box*), desain form yang rapi, transisi *hover* efek kaca (*Glassmorphism*), tata letak *grid*, dan pewarnaan status yang disesuaikan.
+- **Teknologi:** Ditulis menggunakan **100% Vanilla CSS 3** murni tanpa framework tambahan (seperti Bootstrap/Tailwind), menjadikannya sangat ringan, fleksibel, dan kustom.
 
 ---
-*Dibuat untuk mempermudah akses informasi siswa dan pihak administrasi sekolah.*
+
+## 🛠️ Persiapan & Cara Menjalankan Aplikasi (Setup Detail)
+
+Proyek ini dipisah menjadi dua sistem (Backend `Informasi_Sekolah` dan Frontend `frondendinfos`). Berikut adalah panduan menjalankan sistemnya secara mendetail:
+
+### Opsi 1: Setup Sangat Mudah dengan Docker (Direkomendasikan) 🐳
+Ini adalah cara tercepat jika kamu memiliki aplikasi *Docker Desktop* di komputermu.
+
+1. Buka Terminal di folder utama proyek (tempat file `docker-compose.yml` berada).
+2. Jalankan perintah:
+   ```bash
+   docker-compose up -d --build
+   ```
+3. Docker akan otomatis men-*download* PHP, Node.js, dan MySQL.
+4. Buat tabel database pertamanya dengan menjalankan migrasi di dalam *container* Laravel:
+   ```bash
+   docker-compose exec backend php artisan migrate
+   ```
+5. Buka Browser:
+   - **Frontend (Tampilan Web):** `http://localhost:5173`
+   - **Backend (API URL):** `http://localhost:8080`
+
+---
+
+### Opsi 2: Setup Manual Tanpa Docker
+Gunakan cara ini jika kamu menggunakan XAMPP/Laragon.
+
+#### A. Setup Backend (Laravel)
+1. Buka aplikasi XAMPP/Laragon dan nyalakan **MySQL** serta **Apache**.
+2. Buat database baru bernama `informasi_sekolah` melalui PhpMyAdmin.
+3. Buka Terminal/CMD, arahkan ke folder backend:
+   ```bash
+   cd Informasi_Sekolah
+   ```
+4. Instal semua paket PHP:
+   ```bash
+   composer install
+   ```
+5. Buat konfigurasi `.env`:
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+6. Buka file `.env` di text editor dan pastikan konfigurasi databasenya sesuai dengan MySQL milikmu:
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=informasi_sekolah
+   DB_USERNAME=root      # (Atau username MySQL kamu)
+   DB_PASSWORD=          # (Atau password MySQL kamu)
+   ```
+7. Buat tabel di MySQL dan tautkan folder foto/file agar bisa diakses publik:
+   ```bash
+   php artisan migrate
+   php artisan storage:link
+   ```
+8. Nyalakan server lokal Backend, wajib di **Port 8080** karena Frontend mengeksekusi API ke port ini:
+   ```bash
+   php artisan serve --port=8080
+   ```
+
+#### B. Setup Frontend (Vue.js)
+1. Buka **Terminal Baru** (jangan tutup terminal Laravel), lalu arahkan ke folder frontend:
+   ```bash
+   cd frondendinfos
+   ```
+2. Instal semua dependensi JavaScript:
+   ```bash
+   npm install
+   ```
+3. *(Sangat Penting)* Buat file bernama `.env` di dalam folder `frondendinfos` lalu tempel konfigurasi Firebase kamu di dalamnya (agar fitur Komentar berfungsi):
+   ```env
+   VITE_FIREBASE_API_KEY=AIzaSy...
+   VITE_FIREBASE_AUTH_DOMAIN=app-mu.firebaseapp.com
+   VITE_FIREBASE_DATABASE_URL=https://app-mu...
+   VITE_FIREBASE_PROJECT_ID=app-mu
+   VITE_FIREBASE_STORAGE_BUCKET=app-mu...
+   VITE_FIREBASE_MESSAGING_SENDER_ID=123...
+   VITE_FIREBASE_APP_ID=1:123...
+   ```
+4. Jalankan server pengembangan Vue:
+   ```bash
+   npm run dev
+   ```
+5. Selesai! Web dapat diakses di browser pada alamat **`http://localhost:5173`**.
+
+---
+
+## 🔒 Catatan Keamanan
+- Konfigurasi kredensial (seperti sandi database dan kunci API Firebase) tersimpan di `.env` yang secara otomatis **tidak di-upload ke GitHub** (terlindungi oleh `.gitignore`).
+- File dokumen yang diunggah otomatis divalidasi MIME Type-nya di sisi server, memblokir percobaan ekstensi berbahaya (`.exe`, `.php` *shell script*, dll).
+- Akses dan perusakan URL ke Dashboard / API telah diproteksi penuh oleh filter *Middleware* Admin.
